@@ -1,10 +1,13 @@
 import React, { useReducer } from 'react';
 
 import Item from './components/Item';
+import Form from './components/Form';
+
 
 const initialState = {
   showAll: false,
   itemList: [],
+  newItemTitle: '',
 }
 
 interface Item {
@@ -14,6 +17,7 @@ interface Item {
 }
 
 type Action =
+  | { type: 'type_new_title', payload: string }
   | { type: 'add_item', payload: Item }
   | { type: 'delete_item', payload: number }
   | { type: 'toggle_item', payload: number }
@@ -22,6 +26,7 @@ type Action =
 interface AppState {
   showAll: boolean;
   itemList: Item[];
+  newItemTitle: string;
 }
 
 const reducer = (state: AppState, action: Action): AppState => {
@@ -29,6 +34,7 @@ const reducer = (state: AppState, action: Action): AppState => {
     case 'add_item':
       return {
         ...state,
+        newItemTitle: '',
         itemList: [...state.itemList, action.payload]
       }
     case 'delete_item':
@@ -52,6 +58,11 @@ const reducer = (state: AppState, action: Action): AppState => {
         ...state,
         showAll: action.payload,
       };
+    case 'type_new_title':
+      return {
+        ...state,
+        newItemTitle: action.payload,
+      };
     default:
       return state;
   }
@@ -60,7 +71,7 @@ const reducer = (state: AppState, action: Action): AppState => {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(reducer, initialState)
-  const { itemList, showAll } = state;
+  const { itemList, showAll, newItemTitle } = state;
 
 
   return (
@@ -104,16 +115,29 @@ const App: React.FC = () => {
           />
           모든 Item 보기
         </label>
-        <div>
-          <button type="button" onClick={() => {
-            dispatch({ type: 'add_item', payload: { id: itemList.length, text: 'added item', isCompleted: false }})
-          }}>
-            add item
-          </button>
-        </div>
+        <Form
+          value={newItemTitle}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            dispatch({
+              type: "type_new_title",
+              payload: e.currentTarget.value
+            })
+          }}
+          onSubmit={(e: React.FormEvent) => {
+            e.preventDefault()
+            dispatch({
+              type: 'add_item',
+              payload: {
+                id: itemList.length,
+                text: newItemTitle,
+                isCompleted: false,
+              }})
+          }}
+        />
       </footer>
     </>
   );
 }
+
 
 export default App;
