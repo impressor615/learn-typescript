@@ -1,10 +1,68 @@
-import React, { useState } from 'react';
+import React, { useReducer } from 'react';
 
 import Item from './components/Item';
 
+const initialState = {
+  showAll: false,
+  itemList: [],
+}
+
+interface Item {
+  id: number;
+  text: string;
+  isCompleted: boolean;
+}
+
+type Action =
+  | { type: 'add_item', payload: Item }
+  | { type: 'delete_item', payload: number }
+  | { type: 'toggle_item', payload: number }
+  | { type: 'change_show_option', payload: boolean }
+
+interface AppState {
+  showAll: boolean;
+  itemList: Item[];
+}
+
+const reducer = (state: AppState, action: Action): AppState => {
+  switch (action.type) {
+    case 'add_item':
+      return {
+        ...state,
+        itemList: [...state.itemList, action.payload]
+      }
+    case 'delete_item':
+      return {
+        ...state,
+        itemList: state.itemList.filter(item => item.id !== action.payload)
+      }
+    case 'toggle_item':
+      return {
+        ...state,
+        itemList: state.itemList.map(item => {
+          if (item.id === action.payload) {
+            item.isCompleted = !item.isCompleted
+            return item;
+          }
+          return item;
+        })
+      }
+    case 'change_show_option':
+      return {
+        ...state,
+        showAll: action.payload,
+      };
+    default:
+      return state;
+  }
+}
+
+
 const App: React.FC = () => {
-  const [itemList, updateItem] = useState<Item[]>([]);
-  const [showAll, setOption] = useState<boolean>(false);
+  const [state, dispatch] = useReducer(reducer, initialState)
+  const { itemList, showAll } = state;
+
+
   return (
     <>
       <header>
@@ -21,10 +79,11 @@ const App: React.FC = () => {
                   onChange={(e) => {
                     const newState = [...itemList];
                     newState[index] = {
+                      id: index,
                       text: newState[index].text,
                       isCompleted: e.currentTarget.checked,
                     };
-                    updateItem(newState);
+                    dispatch({ type: 'toggle_item', payload: index });
                   }}
                 >
                   {item.text}
@@ -41,12 +100,14 @@ const App: React.FC = () => {
             id="showAll"
             type="checkbox"
             checked={showAll}
-            onChange={(e) => setOption(e.currentTarget.checked)}
+            onChange={(e) => dispatch({ type: 'change_show_option', payload: e.currentTarget.checked })}
           />
           모든 Item 보기
         </label>
         <div>
-          <button type="button" onClick={() => updateItem([...itemList, { text: 'item1', isCompleted: false }])}>
+          <button type="button" onClick={() => {
+            dispatch({ type: 'add_item', payload: { id: itemList.length, text: 'added item', isCompleted: false }})
+          }}>
             add item
           </button>
         </div>
